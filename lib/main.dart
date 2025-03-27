@@ -106,3 +106,26 @@ class _HomepageState extends State<Homepage> {
                       );
                     },
                   ),
+ CupertinoButton(
+                    child: Icon(CupertinoIcons.pencil,
+                        color: CupertinoColors.systemGreen),
+                    onPressed: () {
+                      showCupertinoDialog(
+                        context: context,
+                        builder: (context) {
+                          return CupertinoAlertDialog(
+                            title: Text(
+                                'Change password for ${item['username']}'),
+                            content: CupertinoTextField(
+                              controller: _password,
+                              obscureText: true,
+                            ),
+                            actions: [
+                              CupertinoButton(
+                                child: Text("Close",
+                                    style: TextStyle(
+                                        color: CupertinoColors.destructiveRed)),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
