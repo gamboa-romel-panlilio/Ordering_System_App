@@ -79,3 +79,30 @@ class _HomepageState extends State<Homepage> {
                           return CupertinoAlertDialog(
                             title: Text(
 
+// commit by kayle
+                                'Delete user ${item['username']}?'),
+                            content: Text('Are you sure you want to delete this user?'),
+                            actions: [
+                              CupertinoButton(
+                                child: Text("Cancel",
+                                    style: TextStyle(
+                                        color: CupertinoColors.systemGrey)),
+                                onPressed: () {
+                                  Navigator.pop(context);
+                                },
+                              ),
+                              CupertinoButton(
+                                child: Text("Delete",
+                                    style: TextStyle(
+                                        color: CupertinoColors.destructiveRed)),
+                                onPressed: () {
+                                  deleteUser(item['id']);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
