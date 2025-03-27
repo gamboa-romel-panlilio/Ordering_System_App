@@ -1,4 +1,4 @@
-// commit by romel
+
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
 
@@ -79,7 +79,7 @@ class _HomepageState extends State<Homepage> {
                           return CupertinoAlertDialog(
                             title: Text(
 
-// commit by kayle
+
                                 'Delete user ${item['username']}?'),
                             content: Text('Are you sure you want to delete this user?'),
                             actions: [
@@ -129,3 +129,27 @@ class _HomepageState extends State<Homepage> {
                                   Navigator.pop(context);
                                 },
                               ),
+  CupertinoButton(
+                                child: Text("Save",
+                                    style: TextStyle(
+                                        color: CupertinoColors.systemGreen)),
+                                onPressed: () {
+                                  updateUser(item['id'], _password.text);
+                                  Navigator.pop(context);
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
