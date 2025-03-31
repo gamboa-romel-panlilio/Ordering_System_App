@@ -1,3 +1,4 @@
+
 import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
@@ -42,8 +43,7 @@ class _HomepageState extends State<Homepage> {
   }
 
 
-
-   void addToCart(Map<String, dynamic> item) {
+  void addToCart(Map<String, dynamic> item) {
     setState(() {
       cart.add(item);
     });
@@ -69,6 +69,7 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
+
   void showSuccessDialog() {
     showCupertinoDialog(
       context: context,
@@ -93,7 +94,8 @@ class _HomepageState extends State<Homepage> {
     super.initState();
   }
 
-   @override
+
+  @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -138,6 +140,7 @@ class _HomepageState extends State<Homepage> {
     );
   }
 }
+
 
 class CartPage extends StatelessWidget {
   final List<Map<String, dynamic>> cart;
