@@ -43,21 +43,33 @@ class _HomepageState extends State<Homepage> {
 
 
 
-  Future<void> deleteUser(String id) async {
-    final response = await http.post(
-      Uri.parse(server + "/delete.php"),
-      body: {
-        "id": id,
-      },
-    );
-    print(response.body);
-    getData(); // Refresh the user list after deletion
+   void addToCart(Map<String, dynamic> item) {
+    setState(() {
+      cart.add(item);
+    });
   }
-   @override
-  void initState() {
-    getData();
-    super.initState();
+  Future<void> purchaseItems() async {
+    try {
+      final response = await http.post(
+        Uri.parse(server + "/purchase.php"),
+        body: {"cart": jsonEncode(cart)},
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          cart.clear(); // ✅ Clear cart after purchase
+          getData(); // ✅ Refresh the item list (stock updates)
+        });
+        showSuccessDialog();
+      } else {
+        print("Purchase failed: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error purchasing: $e");
+    }
   }
+
+
 
   @override
   Widget build(BuildContext context) {
