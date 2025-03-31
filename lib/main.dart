@@ -15,27 +15,33 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
-  String server = "http://192.168.100.95/devops";
-  List<dynamic> user = [];
+  String server = "http://192.168.1.115/devops";
+  List<dynamic> items = [];
+  List<Map<String, dynamic>> cart = [];
+  bool isLoading = true;
 
   Future<void> getData() async {
-    final response = await http.get(Uri.parse(server + "/API.php"));
-    setState(() {
-      user = jsonDecode(response.body);
-    });
+    try {
+      final response = await http.get(Uri.parse(server + "/API.php"));
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = jsonDecode(response.body);
+        setState(() {
+          items = data.where((item) => item is Map<String, dynamic>).toList();
+        });
+      } else {
+        print("Error: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Error fetching data: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
-  Future<void> updateUser(String id, String password) async {
-    final response = await http.post(
-      Uri.parse(server + "/update.php"),
-      body: {
-        "id": id,
-        "password": password,
-      },
-    );
-    print(response.body);
-    getData(); // Refresh the user list
-  }
+
 
   Future<void> deleteUser(String id) async {
     final response = await http.post(
