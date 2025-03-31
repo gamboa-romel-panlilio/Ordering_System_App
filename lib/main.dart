@@ -92,3 +92,49 @@ class _HomepageState extends State<Homepage> {
     getData();
     super.initState();
   }
+
+   @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text("Item List"),
+        trailing: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Icon(CupertinoIcons.cart, color: CupertinoColors.activeBlue),
+          onPressed: () {
+            Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (context) => CartPage(cart, purchaseItems)),
+            );
+          },
+        ),
+      ),
+      child: SafeArea(
+        child: isLoading
+            ? Center(child: CupertinoActivityIndicator())
+            : items.isEmpty
+            ? Center(
+            child: Text("No items available",
+                style: TextStyle(color: CupertinoColors.white)))
+            : ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (context, int index) {
+            final item = items[index];
+
+            return CupertinoListTile(
+              title: Text(item['item_name'] ?? "Unknown Item"),
+              subtitle: Text(
+                "Stock: ${item['stock'] ?? '0'} | Price: ₱${item['price'] ?? '0.00'}",
+              ),
+              trailing: CupertinoButton(
+                child: Icon(CupertinoIcons.add_circled,
+                    color: CupertinoColors.systemBlue),
+                onPressed: () => addToCart(item),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
