@@ -69,105 +69,26 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
-
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      child: SafeArea(
-        child: ListView.builder(
-          itemCount: user.length,
-          itemBuilder: (context, int index) {
-            final item = user[index];
-            TextEditingController _password =
-            TextEditingController(text: item['password']);
-
-            return CupertinoListTile(
-              title: Text(item['username']),
-              trailing: Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  CupertinoButton(
-                    child: Icon(CupertinoIcons.trash_fill,
-                        color: CupertinoColors.destructiveRed),
-                    onPressed: () {
-                      showCupertinoDialog(
-                        context: context,
-                        builder: (context) {
-                          return CupertinoAlertDialog(
-                            title: Text(
-
-
-                                'Delete user ${item['username']}?'),
-                            content: Text('Are you sure you want to delete this user?'),
-                            actions: [
-                              CupertinoButton(
-                                child: Text("Cancel",
-                                    style: TextStyle(
-                                        color: CupertinoColors.systemGrey)),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                              ),
-                              CupertinoButton(
-                                child: Text("Delete",
-                                    style: TextStyle(
-                                        color: CupertinoColors.destructiveRed)),
-                                onPressed: () {
-                                  deleteUser(item['id']);
-                                  Navigator.pop(context);
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
- CupertinoButton(
-                    child: Icon(CupertinoIcons.pencil,
-                        color: CupertinoColors.systemGreen),
-                    onPressed: () {
-                      showCupertinoDialog(
-                        context: context,
-                        builder: (context) {
-                          return CupertinoAlertDialog(
-                            title: Text(
-                                'Change password for ${item['username']}'),
-                            content: CupertinoTextField(
-                              controller: _password,
-                              obscureText: true,
-                            ),
-                            actions: [
-                              CupertinoButton(
-                                child: Text("Close",
-                                    style: TextStyle(
-                                        color: CupertinoColors.destructiveRed)),
-                                onPressed: () {
-                                  Navigator.pop(context);
-                                },
-                              ),
-  CupertinoButton(
-                                child: Text("Save",
-                                    style: TextStyle(
-                                        color: CupertinoColors.systemGreen)),
-                                onPressed: () {
-                                  updateUser(item['id'], _password.text);
-                                  Navigator.pop(context);
-                                },
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                  ),
-                ],
-              ),
-            );
-          },
-        ),
-      ),
+  void showSuccessDialog() {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: Text("Purchase Successful"),
+          content: Text("Your order has been placed successfully!"),
+          actions: [
+            CupertinoButton(
+              child: Text("OK"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        );
+      },
     );
   }
-}
+
+  @override
+  void initState() {
+    getData();
+    super.initState();
+  }
