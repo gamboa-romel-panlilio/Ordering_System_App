@@ -1,7 +1,7 @@
-
-import 'dart:convert';
 import 'package:flutter/cupertino.dart';
 import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'add_product_page.dart';
 
 void main() => runApp(CupertinoApp(
   debugShowCheckedModeBanner: false,
@@ -22,19 +22,24 @@ class _HomepageState extends State<Homepage> {
   bool isLoading = true;
 
   Future<void> getData() async {
+    setState(() {
+      isLoading = true;
+    });
+
     try {
-      final response = await http.get(Uri.parse(server + "/API.php"));
+      final response = await http.get(Uri.parse("$server/API.php"));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = jsonDecode(response.body);
+
         setState(() {
-          items = data.where((item) => item is Map<String, dynamic>).toList();
+          items = List<Map<String, dynamic>>.from(data);
         });
       } else {
-        print("Error: ${response.statusCode}");
+        print("❌ API Error: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error fetching data: $e");
+      print("❌ Error fetching data: $e");
     } finally {
       setState(() {
         isLoading = false;
@@ -42,33 +47,32 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
-
   void addToCart(Map<String, dynamic> item) {
     setState(() {
       cart.add(item);
     });
   }
+
   Future<void> purchaseItems() async {
     try {
       final response = await http.post(
-        Uri.parse(server + "/purchase.php"),
+        Uri.parse("$server/purchase.php"),
         body: {"cart": jsonEncode(cart)},
       );
 
       if (response.statusCode == 200) {
         setState(() {
-          cart.clear(); // ✅ Clear cart after purchase
-          getData(); // ✅ Refresh the item list (stock updates)
+          cart.clear();
+          getData();
         });
         showSuccessDialog();
       } else {
-        print("Purchase failed: ${response.statusCode}");
+        print("❌ Purchase failed: ${response.statusCode}");
       }
     } catch (e) {
-      print("Error purchasing: $e");
+      print("❌ Error purchasing: $e");
     }
   }
-
 
   void showSuccessDialog() {
     showCupertinoDialog(
@@ -78,7 +82,7 @@ class _HomepageState extends State<Homepage> {
           title: Text("Purchase Successful"),
           content: Text("Your order has been placed successfully!"),
           actions: [
-            CupertinoButton(
+            CupertinoDialogAction(
               child: Text("OK"),
               onPressed: () => Navigator.pop(context),
             ),
@@ -87,102 +91,3 @@ class _HomepageState extends State<Homepage> {
       },
     );
   }
-
-  @override
-  void initState() {
-    getData();
-    super.initState();
-  }
-
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text("Item List"),
-        trailing: CupertinoButton(
-          padding: EdgeInsets.zero,
-          child: Icon(CupertinoIcons.cart, color: CupertinoColors.activeBlue),
-          onPressed: () {
-            Navigator.push(
-              context,
-              CupertinoPageRoute(builder: (context) => CartPage(cart, purchaseItems)),
-            );
-          },
-        ),
-      ),
-      child: SafeArea(
-        child: isLoading
-            ? Center(child: CupertinoActivityIndicator())
-            : items.isEmpty
-            ? Center(
-            child: Text("No items available",
-                style: TextStyle(color: CupertinoColors.white)))
-            : ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, int index) {
-            final item = items[index];
-
-            return CupertinoListTile(
-              title: Text(item['item_name'] ?? "Unknown Item"),
-              subtitle: Text(
-                "Stock: ${item['stock'] ?? '0'} | Price: ₱${item['price'] ?? '0.00'}",
-              ),
-              trailing: CupertinoButton(
-                child: Icon(CupertinoIcons.add_circled,
-                    color: CupertinoColors.systemBlue),
-                onPressed: () => addToCart(item),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-
-class CartPage extends StatelessWidget {
-  final List<Map<String, dynamic>> cart;
-  final Function purchaseItems;
-
-  const CartPage(this.cart, this.purchaseItems, {super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return CupertinoPageScaffold(
-      navigationBar: CupertinoNavigationBar(
-        middle: Text("Cart (${cart.length} items)"),
-      ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView.builder(
-                itemCount: cart.length,
-                itemBuilder: (context, int index) {
-                  final item = cart[index];
-                  return CupertinoListTile(
-                    title: Text(item['item_name'] ?? "Unknown Item"),
-                    subtitle: Text("Price: ₱${item['price'] ?? '0.00'}"),
-                  );
-                },
-              ),
-            ),
-            if (cart.isNotEmpty)
-              Padding(
-                padding: EdgeInsets.all(16.0),
-                child: CupertinoButton.filled(
-                  child: Text("Purchase"),
-                  onPressed: () {
-                    purchaseItems();
-                    Navigator.pop(context);
-                  },
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
