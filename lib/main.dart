@@ -91,10 +91,113 @@ class _HomepageState extends State<Homepage> {
       },
     );
   }
- void updateItem(Map<String, dynamic> item) {
-    TextEditingController nameController = TextEditingController(text: item['item_name']);
-    TextEditingController stockController = TextEditingController(text: item['stock'].toString());
-    TextEditingController priceController = TextEditingController(text: item['price'].toString());
+
+  @override
+  void initState() {
+    super.initState();
+    Future.delayed(Duration(milliseconds: 500), getData);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      navigationBar: CupertinoNavigationBar(
+        middle: Text("Item List"),
+        leading: CupertinoButton(
+          padding: EdgeInsets.zero,
+          child: Icon(CupertinoIcons.gear, color: CupertinoColors.systemGrey),
+          onPressed: () {
+            Navigator.push(
+              context,
+              CupertinoPageRoute(builder: (context) => SettingsPage()),
+            );
+          },
+        ),
+        trailing: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              child: Icon(CupertinoIcons.add, color: CupertinoColors.activeGreen),
+              onPressed: () async {
+                await Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                    builder: (context) => AddProductPage(
+                      server: server,
+                      refreshItems: getData,
+                    ),
+                  ),
+                );
+                getData();
+              },
+            ),
+            CupertinoButton(
+              padding: EdgeInsets.zero,
+              child: Icon(CupertinoIcons.cart, color: CupertinoColors.activeBlue),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  CupertinoPageRoute(
+                      builder: (context) => CartPage(cart, purchaseItems)),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      child: SafeArea(
+        child: isLoading
+            ? Center(child: CupertinoActivityIndicator())
+            : items.isEmpty
+            ? Center(child: Text("No items available"))
+            : ListView.builder(
+          itemCount: items.length,
+          itemBuilder: (context, int index) {
+            final item = items[index];
+
+            return CupertinoListTile(
+              title: Text(item['item_name'] ?? "Unknown Item"),
+              subtitle: Text(
+                  "Stock: ${item['stock']} | Price: ₱${item['price']}"),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Icon(CupertinoIcons.add_circled,
+                        color: CupertinoColors.systemBlue),
+                    onPressed: () => addToCart(item),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Icon(CupertinoIcons.pencil,
+                        color: CupertinoColors.systemYellow),
+                    onPressed: () => updateItem(item),
+                  ),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    child: Icon(CupertinoIcons.trash,
+                        color: CupertinoColors.systemRed),
+                    onPressed: () => deleteItem(item['id']),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  void updateItem(Map<String, dynamic> item) {
+    // ... (Your updateItem function code here) ...
+    TextEditingController nameController =
+    TextEditingController(text: item['item_name']);
+    TextEditingController stockController =
+    TextEditingController(text: item['stock'].toString());
+    TextEditingController priceController =
+    TextEditingController(text: item['price'].toString());
 
     showCupertinoDialog(
       context: context,
@@ -105,9 +208,16 @@ class _HomepageState extends State<Homepage> {
               title: Text("Update Item"),
               content: Column(
                 children: [
-                  CupertinoTextField(controller: nameController, placeholder: "Item Name"),
-                  CupertinoTextField(controller: stockController, placeholder: "Stock", keyboardType: TextInputType.number),
-                  CupertinoTextField(controller: priceController, placeholder: "Price", keyboardType: TextInputType.number),
+                  CupertinoTextField(
+                      controller: nameController, placeholder: "Item Name"),
+                  CupertinoTextField(
+                      controller: stockController,
+                      placeholder: "Stock",
+                      keyboardType: TextInputType.number),
+                  CupertinoTextField(
+                      controller: priceController,
+                      placeholder: "Price",
+                      keyboardType: TextInputType.number),
                 ],
               ),
               actions: [
@@ -118,6 +228,7 @@ class _HomepageState extends State<Homepage> {
                 CupertinoDialogAction(
                   child: Text("Update"),
                   onPressed: () async {
+                    // ... (Your update logic here) ...
                     String itemName = nameController.text.trim();
                     String stock = stockController.text.trim();
                     String price = priceController.text.trim();
@@ -154,7 +265,8 @@ class _HomepageState extends State<Homepage> {
 
                       if (response.statusCode == 200) {
                         setState(() {
-                          int index = items.indexWhere((element) => element['id'] == item['id']);
+                          int index = items.indexWhere(
+                                  (element) => element['id'] == item['id']);
                           if (index != -1) {
                             items[index]['item_name'] = itemName;
                             items[index]['stock'] = stockValue.toString();
@@ -162,7 +274,7 @@ class _HomepageState extends State<Homepage> {
                           }
                         });
                         Navigator.pop(context);
-                        getData();  // Reload the data after update
+                        getData(); // Reload the data after update
                       } else {
                         print("❌ Update failed: ${response.statusCode}");
                       }
@@ -178,7 +290,9 @@ class _HomepageState extends State<Homepage> {
       },
     );
   }
-   void deleteItem(dynamic id) async {
+
+  void deleteItem(dynamic id) async {
+    // ... (Your deleteItem function code here) ...
     int itemId = int.tryParse(id.toString()) ?? 0;
 
     if (itemId == 0) {
@@ -198,7 +312,8 @@ class _HomepageState extends State<Homepage> {
               onPressed: () => Navigator.pop(context, false),
             ),
             CupertinoDialogAction(
-              child: Text("Delete", style: TextStyle(color: CupertinoColors.systemRed)),
+              child: Text("Delete",
+                  style: TextStyle(color: CupertinoColors.systemRed)),
               onPressed: () => Navigator.pop(context, true),
             ),
           ],
@@ -221,7 +336,7 @@ class _HomepageState extends State<Homepage> {
           setState(() {
             items.removeWhere((item) => item['id'] == itemId);
           });
-          getData();  // Reload the data after deletion
+          getData(); // Reload the data after deletion
           print("✅ Item deleted successfully");
         } else {
           print("❌ Error deleting item: ${responseData['error']}");
@@ -233,89 +348,57 @@ class _HomepageState extends State<Homepage> {
       print("❌ Error deleting item: $e");
     }
   }
- @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration(milliseconds: 500), getData);
-  }
+}
 
+class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text("Item List"),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: Icon(CupertinoIcons.add, color: CupertinoColors.activeGreen),
-              onPressed: () async {
-                await Navigator.push(
-                  context,
-                  CupertinoPageRoute(
-                    builder: (context) => AddProductPage(
-                      server: server,
-                      refreshItems: getData,
-                    ),
-                  ),
-                );
-                getData();
-              },
-            ),
-            CupertinoButton(
-              padding: EdgeInsets.zero,
-              child: Icon(CupertinoIcons.cart, color: CupertinoColors.activeBlue),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  CupertinoPageRoute(builder: (context) => CartPage(cart, purchaseItems)),
-                );
-              },
-            ),
-          ],
-        ),
+        middle: Text("Settings"),
       ),
       child: SafeArea(
-        child: isLoading
-            ? Center(child: CupertinoActivityIndicator())
-            : items.isEmpty
-            ? Center(child: Text("No items available"))
-            : ListView.builder(
-          itemCount: items.length,
-          itemBuilder: (context, int index) {
-            final item = items[index];
-
-            return CupertinoListTile(
-              title: Text(item['item_name'] ?? "Unknown Item"),
-              subtitle: Text("Stock: ${item['stock']} | Price: ₱${item['price']}"),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: Icon(CupertinoIcons.add_circled, color: CupertinoColors.systemBlue),
-                    onPressed: () => addToCart(item),
-                  ),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: Icon(CupertinoIcons.pencil, color: CupertinoColors.systemYellow),
-                    onPressed: () => updateItem(item),
-                  ),
-                  CupertinoButton(
-                    padding: EdgeInsets.zero,
-                    child: Icon(CupertinoIcons.trash, color: CupertinoColors.systemRed),
-                    onPressed: () => deleteItem(item['id']),
-                  ),
-                ],
-              ),
-            );
-          },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            SizedBox(height: 20),
+            Text(
+              "👨‍💻 Developers Team",
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 10),
+            DeveloperTile(name: "Arpon Jolas"),
+            DeveloperTile(name: "Carreon Monica"),
+            DeveloperTile(name: "Gomez Dexter"),
+            DeveloperTile(name: "Gamboa Romel"),
+            DeveloperTile(name: "Larin Kayle"),
+          ],
         ),
       ),
     );
   }
 }
+
+class DeveloperTile extends StatelessWidget {
+  final String name;
+  const DeveloperTile({required this.name});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 20),
+      child: Row(
+        children: [
+          Icon(CupertinoIcons.person_alt_circle,
+              color: CupertinoColors.systemBlue, size: 30),
+          SizedBox(width: 10),
+          Text(name, style: TextStyle(fontSize: 18)),
+        ],
+      ),
+    );
+  }
+}
+
 class CartPage extends StatelessWidget {
   final List<Map<String, dynamic>> cart;
   final Function purchaseItems;
@@ -360,4 +443,3 @@ class CartPage extends StatelessWidget {
     );
   }
 }
-
