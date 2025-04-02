@@ -27,7 +27,7 @@ class _AddProductPageState extends State<AddProductPage> {
       final response = await http.post(
         Uri.parse("${widget.server}/add_product.php"),
         headers: {
-          "Content-Type": "application/x-www-form-urlencoded", // Tama ang format
+          "Content-Type": "application/x-www-form-urlencoded",
         },
         body: {
           "item_name": nameController.text.trim(),
@@ -35,16 +35,15 @@ class _AddProductPageState extends State<AddProductPage> {
           "stock": stockController.text.trim(),
         },
       );
- print("Response: ${response.body}"); // Debugging
 
       if (response.statusCode == 200) {
         final responseData = jsonDecode(response.body);
 
         if (responseData["success"] == true) {
-          widget.refreshItems(); // ✅ Refresh list
-          Navigator.pop(context); // ✅ Close page
+          widget.refreshItems();
+          Navigator.pop(context);
         } else {
-          showErrorDialog(responseData["message"]); // Error message galing sa PHP
+          showErrorDialog(responseData["message"]);
         }
       } else {
         showErrorDialog("Server error: ${response.statusCode}");
@@ -73,7 +72,8 @@ class _AddProductPageState extends State<AddProductPage> {
       ),
     );
   }
- @override
+
+  @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
@@ -83,18 +83,60 @@ class _AddProductPageState extends State<AddProductPage> {
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              CupertinoTextField(controller: nameController, placeholder: "Item Name"),
-              SizedBox(height: 10),
-              CupertinoTextField(controller: priceController, placeholder: "Price", keyboardType: TextInputType.number),
-              SizedBox(height: 10),
-              CupertinoTextField(controller: stockController, placeholder: "Stock", keyboardType: TextInputType.number),
-              SizedBox(height: 20),
-              isLoading
-                  ? CupertinoActivityIndicator()
-                  : CupertinoButton.filled(
-                child: Text("Add Product"),
-                onPressed: addProduct,
+              CupertinoTextField(
+                controller: nameController,
+                placeholder: "Item Name",
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6, // Light background
+                  border: Border.all(color: CupertinoColors.systemGrey4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                style: TextStyle(color: CupertinoColors.white), // Text color white
+                placeholderStyle: TextStyle(color: CupertinoColors.inactiveGray),
+              ),
+              SizedBox(height: 12),
+              CupertinoTextField(
+                controller: priceController,
+                placeholder: "Price",
+                keyboardType: TextInputType.number,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  border: Border.all(color: CupertinoColors.systemGrey4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                style: TextStyle(color: CupertinoColors.white), // Text color white
+                placeholderStyle: TextStyle(color: CupertinoColors.inactiveGray),
+              ),
+              SizedBox(height: 12),
+              CupertinoTextField(
+                controller: stockController,
+                placeholder: "Stock",
+                keyboardType: TextInputType.number,
+                padding: EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: CupertinoColors.systemGrey6,
+                  border: Border.all(color: CupertinoColors.systemGrey4),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                style: TextStyle(color: CupertinoColors.white), // Text color white
+                placeholderStyle: TextStyle(color: CupertinoColors.inactiveGray),
+              ),
+              SizedBox(height: 24),
+              CupertinoButton(
+                child: isLoading
+                    ? CupertinoActivityIndicator()
+                    : Text(
+                  "Add Product",
+                  style: TextStyle(fontWeight: FontWeight.w600, color: CupertinoColors.white), // Bold text, white color
+                ),
+                onPressed: isLoading ? null : addProduct,
+                padding: EdgeInsets.symmetric(vertical: 16),
+                borderRadius: BorderRadius.circular(12),
+                color: CupertinoColors.activeBlue, // Blue button
               ),
             ],
           ),

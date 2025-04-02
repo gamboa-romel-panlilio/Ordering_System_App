@@ -180,7 +180,8 @@ class _HomepageState extends State<Homepage> {
         middle: Text("Item List"),
         leading: CupertinoButton(
           padding: EdgeInsets.zero,
-          child: Icon(CupertinoIcons.gear, color: CupertinoColors.systemGrey),
+          child: Icon(CupertinoIcons.settings_solid,
+              color: CupertinoColors.systemGrey),
           onPressed: () {
             Navigator.push(
               context,
@@ -193,7 +194,8 @@ class _HomepageState extends State<Homepage> {
           children: [
             CupertinoButton(
               padding: EdgeInsets.zero,
-              child: Icon(CupertinoIcons.add, color: CupertinoColors.activeGreen),
+              child: Icon(CupertinoIcons.add_circled_solid,
+                  color: CupertinoColors.activeGreen),
               onPressed: () async {
                 await Navigator.push(
                   context,
@@ -209,12 +211,13 @@ class _HomepageState extends State<Homepage> {
             ),
             CupertinoButton(
               padding: EdgeInsets.zero,
-              child: Icon(CupertinoIcons.cart, color: CupertinoColors.activeBlue),
+              child: Icon(CupertinoIcons.cart_fill,
+                  color: CupertinoColors.activeBlue),
               onPressed: () {
                 Navigator.push(
                   context,
                   CupertinoPageRoute(
-                      builder: (context) => CartPage(cart, purchaseItems)),
+                      builder: (context) => CartPage(cart, purchaseItems, refreshCart: () => setState(() {}))), // Pass refreshCart
                 );
               },
             ),
@@ -240,19 +243,20 @@ class _HomepageState extends State<Homepage> {
                 children: [
                   CupertinoButton(
                     padding: EdgeInsets.zero,
-                    child: Icon(CupertinoIcons.add_circled,
+                    child: Icon(CupertinoIcons.plus_circle_fill,
                         color: CupertinoColors.systemBlue),
                     onPressed: () => addToCart(item),
                   ),
                   CupertinoButton(
                     padding: EdgeInsets.zero,
-                    child: Icon(CupertinoIcons.pencil,
+                    child: Icon(
+                        CupertinoIcons.pencil_ellipsis_rectangle,
                         color: CupertinoColors.systemYellow),
                     onPressed: () => updateItem(item),
                   ),
                   CupertinoButton(
                     padding: EdgeInsets.zero,
-                    child: Icon(CupertinoIcons.trash,
+                    child: Icon(CupertinoIcons.trash_fill,
                         color: CupertinoColors.systemRed),
                     onPressed: () => deleteItem(item['id']),
                   ),
@@ -350,7 +354,8 @@ class _HomepageState extends State<Homepage> {
                         getData();
                       } else {
                         print("❌ Update failed: ${response.statusCode}");
-                        _showErrorDialog("Update failed: ${response.statusCode}");
+                        _showErrorDialog(
+                            "Update failed: ${response.statusCode}");
                       }
                     } catch (e) {
                       print("❌ Error updating item: $e");
@@ -418,7 +423,8 @@ class _HomepageState extends State<Homepage> {
         }
       } else {
         print("❌ Delete request failed with status: ${response.statusCode}");
-        _showErrorDialog("Delete request failed with status: ${response.statusCode}");
+        _showErrorDialog(
+            "Delete request failed with status: ${response.statusCode}");
       }
     } catch (e) {
       print("❌ Error deleting item: $e");
@@ -476,41 +482,60 @@ class DeveloperTile extends StatelessWidget {
   }
 }
 
-class CartPage extends StatelessWidget {
+class CartPage extends StatefulWidget {
   final List<Map<String, dynamic>> cart;
   final Function purchaseItems;
+  final Function refreshCart; // Add refreshCart
 
-  const CartPage(this.cart, this.purchaseItems, {super.key});
+  const CartPage(this.cart, this.purchaseItems, {required this.refreshCart, super.key});
+
+  @override
+  _CartPageState createState() => _CartPageState();
+}
+
+class _CartPageState extends State<CartPage> {
+
+  void removeFromCart(int index) {
+    setState(() {
+      widget.cart.removeAt(index);
+    });
+    widget.refreshCart(); // Refresh the Homepage cart display.
+  }
 
   @override
   Widget build(BuildContext context) {
     return CupertinoPageScaffold(
       navigationBar: CupertinoNavigationBar(
-        middle: Text("Cart (${cart.length} items)"),
+        middle: Text("Cart (${widget.cart.length} items)"),
       ),
       child: SafeArea(
         child: Column(
           children: [
             Expanded(
               child: ListView.builder(
-                itemCount: cart.length,
+                itemCount: widget.cart.length,
                 itemBuilder: (context, int index) {
-                  final item = cart[index];
+                  final item = widget.cart[index];
                   return CupertinoListTile(
                     title: Text(
                         "${item['item_name'] ?? 'Unknown Item'} (${item['quantity'] ?? 1})"),
                     subtitle: Text("Price: ₱${item['price'] ?? '0.00'}"),
+                    trailing: CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      child: Icon(CupertinoIcons.delete_solid, color: CupertinoColors.systemRed),
+                      onPressed: () => removeFromCart(index),
+                    ),
                   );
                 },
               ),
             ),
-            if (cart.isNotEmpty)
+            if (widget.cart.isNotEmpty)
               Padding(
                 padding: EdgeInsets.all(16.0),
                 child: CupertinoButton.filled(
                   child: Text("Purchase"),
                   onPressed: () {
-                    purchaseItems();
+                    widget.purchaseItems();
                     Navigator.pop(context);
                   },
                 ),
