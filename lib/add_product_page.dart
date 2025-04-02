@@ -35,3 +35,41 @@ class _AddProductPageState extends State<AddProductPage> {
           "stock": stockController.text.trim(),
         },
       );
+ print("Response: ${response.body}"); // Debugging
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+
+        if (responseData["success"] == true) {
+          widget.refreshItems(); // ✅ Refresh list
+          Navigator.pop(context); // ✅ Close page
+        } else {
+          showErrorDialog(responseData["message"]); // Error message galing sa PHP
+        }
+      } else {
+        showErrorDialog("Server error: ${response.statusCode}");
+      }
+    } catch (e) {
+      showErrorDialog("Error adding product: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void showErrorDialog(String message) {
+    showCupertinoDialog(
+      context: context,
+      builder: (context) => CupertinoAlertDialog(
+        title: Text("Error"),
+        content: Text(message),
+        actions: [
+          CupertinoButton(
+            child: Text("OK"),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
