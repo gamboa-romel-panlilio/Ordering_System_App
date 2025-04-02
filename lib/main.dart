@@ -91,3 +91,90 @@ class _HomepageState extends State<Homepage> {
       },
     );
   }
+ void updateItem(Map<String, dynamic> item) {
+    TextEditingController nameController = TextEditingController(text: item['item_name']);
+    TextEditingController stockController = TextEditingController(text: item['stock'].toString());
+    TextEditingController priceController = TextEditingController(text: item['price'].toString());
+
+    showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return CupertinoAlertDialog(
+              title: Text("Update Item"),
+              content: Column(
+                children: [
+                  CupertinoTextField(controller: nameController, placeholder: "Item Name"),
+                  CupertinoTextField(controller: stockController, placeholder: "Stock", keyboardType: TextInputType.number),
+                  CupertinoTextField(controller: priceController, placeholder: "Price", keyboardType: TextInputType.number),
+                ],
+              ),
+              actions: [
+                CupertinoDialogAction(
+                  child: Text("Cancel"),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                CupertinoDialogAction(
+                  child: Text("Update"),
+                  onPressed: () async {
+                    String itemName = nameController.text.trim();
+                    String stock = stockController.text.trim();
+                    String price = priceController.text.trim();
+
+                    if (itemName.isEmpty || stock.isEmpty || price.isEmpty) {
+                      print("❌ All fields are required");
+                      return;
+                    }
+
+                    int? stockValue = int.tryParse(stock);
+                    double? priceValue = double.tryParse(price);
+
+                    if (stockValue == null || priceValue == null) {
+                      print("❌ Invalid stock or price values");
+                      return;
+                    }
+
+                    Map<String, dynamic> requestData = {
+                      "id": item['id'],
+                      "item_name": itemName,
+                      "stock": stockValue,
+                      "price": priceValue,
+                    };
+
+                    try {
+                      final response = await http.post(
+                        Uri.parse("$server/update_item.php"),
+                        headers: {
+                          "Content-Type": "application/json",
+                          "Accept": "application/json",
+                        },
+                        body: jsonEncode(requestData),
+                      );
+
+                      if (response.statusCode == 200) {
+                        setState(() {
+                          int index = items.indexWhere((element) => element['id'] == item['id']);
+                          if (index != -1) {
+                            items[index]['item_name'] = itemName;
+                            items[index]['stock'] = stockValue.toString();
+                            items[index]['price'] = priceValue.toString();
+                          }
+                        });
+                        Navigator.pop(context);
+                        getData();  // Reload the data after update
+                      } else {
+                        print("❌ Update failed: ${response.statusCode}");
+                      }
+                    } catch (e) {
+                      print("❌ Error updating item: $e");
+                    }
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
