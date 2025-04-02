@@ -178,3 +178,58 @@ class _HomepageState extends State<Homepage> {
       },
     );
   }
+   void deleteItem(dynamic id) async {
+    int itemId = int.tryParse(id.toString()) ?? 0;
+
+    if (itemId == 0) {
+      print("❌ Invalid item ID");
+      return;
+    }
+
+    bool confirmDelete = await showCupertinoDialog(
+      context: context,
+      builder: (context) {
+        return CupertinoAlertDialog(
+          title: Text("Delete Item"),
+          content: Text("Are you sure you want to delete this item?"),
+          actions: [
+            CupertinoDialogAction(
+              child: Text("Cancel"),
+              onPressed: () => Navigator.pop(context, false),
+            ),
+            CupertinoDialogAction(
+              child: Text("Delete", style: TextStyle(color: CupertinoColors.systemRed)),
+              onPressed: () => Navigator.pop(context, true),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!confirmDelete) return;
+
+    try {
+      final response = await http.post(
+        Uri.parse("$server/delete_item.php"),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"id": itemId}),
+      );
+
+      if (response.statusCode == 200) {
+        final responseData = jsonDecode(response.body);
+        if (responseData["success"] != null) {
+          setState(() {
+            items.removeWhere((item) => item['id'] == itemId);
+          });
+          getData();  // Reload the data after deletion
+          print("✅ Item deleted successfully");
+        } else {
+          print("❌ Error deleting item: ${responseData['error']}");
+        }
+      } else {
+        print("❌ Delete request failed with status: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("❌ Error deleting item: $e");
+    }
+  }
