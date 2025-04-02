@@ -37,9 +37,11 @@ class _HomepageState extends State<Homepage> {
         });
       } else {
         print("❌ API Error: ${response.statusCode}");
+        _showErrorDialog("API Error: ${response.statusCode}");
       }
     } catch (e) {
       print("❌ Error fetching data: $e");
+      _showErrorDialog("Error fetching data: $e");
     } finally {
       setState(() {
         isLoading = false;
@@ -48,8 +50,53 @@ class _HomepageState extends State<Homepage> {
   }
 
   void addToCart(Map<String, dynamic> item) {
+    if (int.parse(item['stock'].toString()) <= 0) {
+      showCupertinoDialog(
+        context: context,
+        builder: (context) => CupertinoAlertDialog(
+          title: Text("Out of Stock"),
+          content: Text("${item['item_name']} is out of stock."),
+          actions: [
+            CupertinoDialogAction(
+              child: Text("OK"),
+              onPressed: () => Navigator.pop(context),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
     setState(() {
-      cart.add(item);
+      final existingItemIndex =
+      cart.indexWhere((cartItem) => cartItem['id'] == item['id']);
+
+      int currentCartQuantity = 0;
+      if (existingItemIndex != -1) {
+        currentCartQuantity = cart[existingItemIndex]['quantity'] ?? 0;
+      }
+
+      if (currentCartQuantity < int.parse(item['stock'].toString())) {
+        if (existingItemIndex != -1) {
+          cart[existingItemIndex]['quantity'] = currentCartQuantity + 1;
+        } else {
+          cart.add({...item, 'quantity': 1});
+        }
+      } else {
+        showCupertinoDialog(
+          context: context,
+          builder: (context) => CupertinoAlertDialog(
+            title: Text("Insufficient Stock"),
+            content: Text("You cannot add more items than the available stock."),
+            actions: [
+              CupertinoDialogAction(
+                child: Text("OK"),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+        );
+      }
     });
   }
 
@@ -57,20 +104,30 @@ class _HomepageState extends State<Homepage> {
     try {
       final response = await http.post(
         Uri.parse("$server/purchase.php"),
-        body: {"cart": jsonEncode(cart)},
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(cart), // Send the cart data as JSON
       );
 
       if (response.statusCode == 200) {
-        setState(() {
-          cart.clear();
-          getData();
-        });
-        showSuccessDialog();
+        final responseData = jsonDecode(response.body); //decode the response.
+        if (responseData['success'] == true) {
+          setState(() {
+            cart.clear();
+            getData();
+          });
+          showSuccessDialog();
+        } else {
+          _showErrorDialog(responseData['message'] ?? "Purchase failed");
+        }
       } else {
         print("❌ Purchase failed: ${response.statusCode}");
+        _showErrorDialog("Purchase failed: ${response.statusCode}");
       }
     } catch (e) {
       print("❌ Error purchasing: $e");
+      _showErrorDialog("Error purchasing: $e");
     }
   }
 
@@ -90,6 +147,24 @@ class _HomepageState extends State<Homepage> {
         );
       },
     );
+  }
+
+  void _showErrorDialog(String message) {
+    showCupertinoDialog(
+        context: context,
+        builder: (BuildContext context) => CupertinoAlertDialog(
+          title: const Text('Error'),
+          content: Text(message),
+          actions: <CupertinoDialogAction>[
+            CupertinoDialogAction(
+              isDefaultAction: true,
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Ok'),
+            )
+          ],
+        ));
   }
 
   @override
@@ -191,7 +266,6 @@ class _HomepageState extends State<Homepage> {
   }
 
   void updateItem(Map<String, dynamic> item) {
-    // ... (Your updateItem function code here) ...
     TextEditingController nameController =
     TextEditingController(text: item['item_name']);
     TextEditingController stockController =
@@ -228,7 +302,6 @@ class _HomepageState extends State<Homepage> {
                 CupertinoDialogAction(
                   child: Text("Update"),
                   onPressed: () async {
-                    // ... (Your update logic here) ...
                     String itemName = nameController.text.trim();
                     String stock = stockController.text.trim();
                     String price = priceController.text.trim();
@@ -274,12 +347,14 @@ class _HomepageState extends State<Homepage> {
                           }
                         });
                         Navigator.pop(context);
-                        getData(); // Reload the data after update
+                        getData();
                       } else {
                         print("❌ Update failed: ${response.statusCode}");
+                        _showErrorDialog("Update failed: ${response.statusCode}");
                       }
                     } catch (e) {
                       print("❌ Error updating item: $e");
+                      _showErrorDialog("Error updating item: $e");
                     }
                   },
                 ),
@@ -292,7 +367,6 @@ class _HomepageState extends State<Homepage> {
   }
 
   void deleteItem(dynamic id) async {
-    // ... (Your deleteItem function code here) ...
     int itemId = int.tryParse(id.toString()) ?? 0;
 
     if (itemId == 0) {
@@ -336,16 +410,19 @@ class _HomepageState extends State<Homepage> {
           setState(() {
             items.removeWhere((item) => item['id'] == itemId);
           });
-          getData(); // Reload the data after deletion
+          getData();
           print("✅ Item deleted successfully");
         } else {
           print("❌ Error deleting item: ${responseData['error']}");
+          _showErrorDialog("Error deleting item: ${responseData['error']}");
         }
       } else {
         print("❌ Delete request failed with status: ${response.statusCode}");
+        _showErrorDialog("Delete request failed with status: ${response.statusCode}");
       }
     } catch (e) {
       print("❌ Error deleting item: $e");
+      _showErrorDialog("Error deleting item: $e");
     }
   }
 }
@@ -363,7 +440,7 @@ class SettingsPage extends StatelessWidget {
           children: [
             SizedBox(height: 20),
             Text(
-              "👨‍💻 Developers Team",
+              "‍ Developers Team",
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             SizedBox(height: 10),
@@ -420,7 +497,8 @@ class CartPage extends StatelessWidget {
                 itemBuilder: (context, int index) {
                   final item = cart[index];
                   return CupertinoListTile(
-                    title: Text(item['item_name'] ?? "Unknown Item"),
+                    title: Text(
+                        "${item['item_name'] ?? 'Unknown Item'} (${item['quantity'] ?? 1})"),
                     subtitle: Text("Price: ₱${item['price'] ?? '0.00'}"),
                   );
                 },
