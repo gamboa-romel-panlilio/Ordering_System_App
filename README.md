@@ -1,4 +1,4 @@
-# ordering_system_app
+# Quick Cart
 
 A new Flutter project.
 
