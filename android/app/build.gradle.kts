@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.devops.ordering_system_app"
+        namespace = "com.devops.ordering_system_app"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
